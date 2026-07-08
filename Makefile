@@ -1,4 +1,4 @@
-.PHONY: fmt fmt-check lint test check build cross-compile install release
+.PHONY: fmt fmt-check lint test installer-check check build cross-compile install release
 
 VERSION ?= dev
 COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || true)
@@ -17,7 +17,14 @@ lint:
 test:
 	go test ./...
 
-check: fmt-check lint test
+installer-check:
+	sh -n docs/install.sh
+	@if LC_ALL=C grep -n '[^ -~]' docs/install.sh; then \
+		echo "docs/install.sh must contain ASCII only"; \
+		exit 1; \
+	fi
+
+check: fmt-check lint test installer-check
 
 build:
 	CGO_ENABLED=0 go build -trimpath -ldflags "$(LDFLAGS)" -o bin/bgst ./cmd/bgst
