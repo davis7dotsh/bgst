@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/davis7dotsh/bgst/internal/process"
@@ -28,15 +29,33 @@ type PullRequest struct {
 	Checks           []Check `json:"statusCheckRollup"`
 }
 
-type Client struct {
-	runner process.Runner
+type commandRunner interface {
+	Run(ctx context.Context, dir, name string, args ...string) (string, error)
 }
+
+type Client struct {
+	runner commandRunner
+}
+
+const pullRequestLimit = 5
 
 func New() Client {
 	return Client{runner: process.Runner{}}
 }
 
 func (c Client) OpenPullRequests(ctx context.Context, dir, repo string) ([]PullRequest, error) {
+	drafts, err := c.pullRequests(ctx, dir, repo, "draft:true")
+	if err != nil {
+		return nil, err
+	}
+	ready, err := c.pullRequests(ctx, dir, repo, "draft:false")
+	if err != nil {
+		return nil, err
+	}
+	return append(drafts, ready...), nil
+}
+
+func (c Client) pullRequests(ctx context.Context, dir, repo, draftFilter string) ([]PullRequest, error) {
 	output, err := c.runner.Run(
 		ctx,
 		dir,
@@ -44,7 +63,8 @@ func (c Client) OpenPullRequests(ctx context.Context, dir, repo string) ([]PullR
 		"pr", "list",
 		"--repo", repo,
 		"--state", "open",
-		"--limit", "1000",
+		"--search", draftFilter+" sort:updated-desc",
+		"--limit", strconv.Itoa(pullRequestLimit),
 		"--json", "number,title,url,isDraft,headRefName,baseRefName,reviewDecision,mergeStateStatus,statusCheckRollup",
 	)
 	if err != nil {
@@ -57,6 +77,9 @@ func (c Client) OpenPullRequests(ctx context.Context, dir, repo string) ([]PullR
 	var pulls []PullRequest
 	if err := json.Unmarshal([]byte(output), &pulls); err != nil {
 		return nil, fmt.Errorf("could not understand GitHub CLI output: %w", err)
+	}
+	if len(pulls) > pullRequestLimit {
+		pulls = pulls[:pullRequestLimit]
 	}
 	return pulls, nil
 }

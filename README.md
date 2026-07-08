@@ -1,6 +1,6 @@
 # Better Git Status (`bgst`)
 
-One command for the useful state of a GitHub repo: branch and worktree changes, last commit, remote drift, draft PRs, and open PR checks.
+One command for the useful state of a GitHub repo: branch and worktree changes, last commit, remote drift, plus the five most recently updated drafts and five most recently updated open PRs.
 
 ```sh
 curl -fsSL https://davis7dotsh.github.io/bgst/install.sh | sh
