@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Better Git Status: the useful state of a GitHub repository in one command." />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <title>BGST — Better Git Status</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0b0c0d;
+        --panel: #121416;
+        --border: #282c2f;
+        --text: #f2f3ef;
+        --muted: #969d96;
+        --accent: #b6f36b;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--text);
+        font: 16px/1.55 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      }
+      main { width: min(720px, calc(100% - 40px)); margin: 0 auto; padding: 14vh 0 64px; }
+      .mark { color: var(--accent); font-size: 14px; font-weight: 800; letter-spacing: .16em; }
+      h1 { max-width: 680px; margin: 18px 0 16px; font: 700 clamp(42px, 9vw, 76px)/.98 system-ui, sans-serif; letter-spacing: -.055em; }
+      .lede { max-width: 590px; margin: 0 0 34px; color: var(--muted); font: 19px/1.55 system-ui, sans-serif; }
+      .install { display: flex; align-items: center; gap: 14px; padding: 16px 18px; overflow-x: auto; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; }
+      .install code { flex: 1; white-space: nowrap; color: var(--accent); }
+      button { border: 0; padding: 7px 10px; border-radius: 6px; background: #242925; color: var(--text); cursor: pointer; font: inherit; }
+      button:hover { background: #30362f; }
+      .commands { margin: 44px 0; border-top: 1px solid var(--border); }
+      .command { display: grid; grid-template-columns: 190px 1fr; gap: 18px; padding: 16px 0; border-bottom: 1px solid var(--border); }
+      .command code { color: var(--text); }
+      .command span { color: var(--muted); font-family: system-ui, sans-serif; }
+      footer { display: flex; gap: 22px; color: var(--muted); font-size: 14px; }
+      a { color: inherit; text-underline-offset: 3px; }
+      a:hover { color: var(--accent); }
+      @media (max-width: 580px) {
+        main { padding-top: 10vh; }
+        .command { grid-template-columns: 1fr; gap: 4px; }
+        .install { align-items: flex-start; flex-direction: column; }
+        .install code { white-space: normal; word-break: break-all; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="mark">BGST</div>
+      <h1>Better Git Status.</h1>
+      <p class="lede">The useful state of the GitHub repository you're standing in—branches, changes, drift, drafts, PRs, and checks.</p>
+
+      <div class="install" aria-label="Install command">
+        <code id="install">curl -fsSL https://davis7dotsh.github.io/bgst/install.sh | sh</code>
+        <button type="button" onclick="copyInstall(this)">copy</button>
+      </div>
+
+      <section class="commands" aria-label="Commands">
+        <div class="command"><code>bgst</code><span>See the whole repo at a glance.</span></div>
+        <div class="command"><code>bgst pull</code><span>Fetch everything, without moving your worktree.</span></div>
+        <div class="command"><code>bgst yeet "message"</code><span>Commit everything and optionally push it.</span></div>
+        <div class="command"><code>bgst update</code><span>Install the latest release.</span></div>
+      </section>
+
+      <footer>
+        <a href="https://github.com/davis7dotsh/bgst">GitHub</a>
+        <a href="./install.ps1">Windows installer</a>
+        <a href="https://github.com/davis7dotsh/bgst/blob/main/LICENSE">MIT</a>
+      </footer>
+    </main>
+    <script>
+      async function copyInstall(button) {
+        await navigator.clipboard.writeText(document.querySelector("#install").textContent);
+        button.textContent = "copied";
+        setTimeout(() => { button.textContent = "copy"; }, 1200);
+      }
+    </script>
+  </body>
+</html>
