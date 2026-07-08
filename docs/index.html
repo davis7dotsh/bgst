@@ -14,7 +14,7 @@
         --border: #282c2f;
         --text: #f2f3ef;
         --muted: #969d96;
-        --accent: #b6f36b;
+        --accent: #ff8a3d;
       }
       * { box-sizing: border-box; }
       body {
@@ -25,8 +25,7 @@
         font: 16px/1.55 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       }
       main { width: min(720px, calc(100% - 40px)); margin: 0 auto; padding: 14vh 0 64px; }
-      .mark { color: var(--accent); font-size: 14px; font-weight: 800; letter-spacing: .16em; }
-      h1 { max-width: 680px; margin: 18px 0 16px; font: 700 clamp(42px, 9vw, 76px)/.98 system-ui, sans-serif; letter-spacing: -.055em; }
+      h1 { max-width: 680px; margin: 0 0 16px; font: 700 clamp(42px, 9vw, 76px)/.98 system-ui, sans-serif; letter-spacing: -.055em; }
       .lede { max-width: 590px; margin: 0 0 34px; color: var(--muted); font: 19px/1.55 system-ui, sans-serif; }
       .install { display: flex; align-items: center; gap: 14px; padding: 16px 18px; overflow-x: auto; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; }
       .install code { flex: 1; white-space: nowrap; color: var(--accent); }
@@ -49,7 +48,6 @@
   </head>
   <body>
     <main>
-      <div class="mark">BGST</div>
       <h1>Better Git Status.</h1>
       <p class="lede">The useful state of the GitHub repository you're standing in—branches, changes, drift, drafts, PRs, and checks.</p>
 
@@ -66,9 +64,9 @@
       </section>
 
       <footer>
-        <a href="https://github.com/davis7dotsh/bgst">GitHub</a>
+        <a href="https://github.com/davis7dotsh/bgst" target="_blank" rel="noopener noreferrer">GitHub</a>
         <a href="./install.ps1">Windows installer</a>
-        <a href="https://github.com/davis7dotsh/bgst/blob/main/LICENSE">MIT</a>
+        <a href="https://github.com/davis7dotsh/bgst/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT</a>
       </footer>
     </main>
     <script>
