@@ -23,20 +23,26 @@ type BuildInfo struct {
 	Date    string
 }
 
+type pullRequestClient interface {
+	OpenPullRequests(ctx context.Context, dir, repo string) ([]gh.PullRequest, error)
+}
+
 type App struct {
 	in        io.Reader
 	out       io.Writer
 	buildInfo BuildInfo
 	repos     repository.Service
-	github    gh.Client
+	github    pullRequestClient
 	updater   updater.Service
 	presenter presentation.Presenter
 }
 
 func New(in io.Reader, out io.Writer, buildInfo BuildInfo) App {
+	interactive := false
 	color := false
 	if file, ok := out.(*os.File); ok {
-		color = term.IsTerminal(file.Fd()) && os.Getenv("NO_COLOR") == "" && os.Getenv("TERM") != "dumb"
+		interactive = term.IsTerminal(file.Fd()) && os.Getenv("TERM") != "dumb"
+		color = interactive && os.Getenv("NO_COLOR") == ""
 	}
 	return App{
 		in:        in,
@@ -45,7 +51,7 @@ func New(in io.Reader, out io.Writer, buildInfo BuildInfo) App {
 		repos:     repository.New(),
 		github:    gh.New(),
 		updater:   updater.New(),
-		presenter: presentation.New(out, color),
+		presenter: presentation.New(out, color, interactive),
 	}
 }
 
@@ -91,6 +97,7 @@ func (a App) status(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	a.presenter.Repository(info)
 
 	var pulls []gh.PullRequest
 	var pullErr error
@@ -99,9 +106,11 @@ func (a App) status(ctx context.Context) error {
 	} else if info.Remote.NameWithOwner() == "" {
 		pullErr = errors.New("the selected remote is not a github.com repository")
 	} else {
+		stopLoading := a.presenter.LoadingPullRequests()
 		pulls, pullErr = a.github.OpenPullRequests(ctx, info.Root, info.Remote.NameWithOwner())
+		stopLoading()
 	}
-	a.presenter.Overview(info, pulls, pullErr)
+	a.presenter.PullRequests(pulls, pullErr)
 	return nil
 }
 

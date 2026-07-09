@@ -1,6 +1,7 @@
 # Better Git Status (`bgst`)
 
 One command for the useful state of a GitHub repo: branch and worktree changes, last commit, remote drift, plus the five most recently updated drafts and five most recently updated open PRs.
+Local repository details print immediately while GitHub data loads.
 
 ```sh
 curl -fsSL https://davis7dotsh.github.io/bgst/install.sh | sh

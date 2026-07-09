@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"sync"
 	"time"
 
 	gh "github.com/davis7dotsh/bgst/internal/github"
@@ -11,15 +12,16 @@ import (
 )
 
 type Presenter struct {
-	w     io.Writer
-	color bool
+	w           io.Writer
+	color       bool
+	interactive bool
 }
 
-func New(w io.Writer, color bool) Presenter {
-	return Presenter{w: w, color: color}
+func New(w io.Writer, color, interactive bool) Presenter {
+	return Presenter{w: w, color: color, interactive: interactive}
 }
 
-func (p Presenter) Overview(info repository.Info, pulls []gh.PullRequest, pullErr error) {
+func (p Presenter) Repository(info repository.Info) {
 	name := "local repository"
 	if info.Remote != nil && info.Remote.NameWithOwner() != "" {
 		name = info.Remote.NameWithOwner()
@@ -49,7 +51,9 @@ func (p Presenter) Overview(info repository.Info, pulls []gh.PullRequest, pullEr
 		p.row("Last commit", commit)
 		p.row("", info.LastCommit.Subject)
 	}
+}
 
+func (p Presenter) PullRequests(pulls []gh.PullRequest, pullErr error) {
 	if pullErr != nil {
 		p.section("Pull requests")
 		fmt.Fprintf(p.w, "  %s %v\n", p.yellow("!"), pullErr)
@@ -67,6 +71,41 @@ func (p Presenter) Overview(info repository.Info, pulls []gh.PullRequest, pullEr
 	}
 	p.pullSection("Draft PRs", drafts)
 	p.pullSection("Open PRs", ready)
+}
+
+func (p Presenter) LoadingPullRequests() func() {
+	if !p.interactive {
+		return func() {}
+	}
+
+	frames := []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
+	fmt.Fprintf(p.w, "\n  %s Loading pull requests…", p.yellow(frames[0]))
+	done := make(chan struct{})
+	stopped := make(chan struct{})
+	go func() {
+		defer close(stopped)
+		ticker := time.NewTicker(80 * time.Millisecond)
+		defer ticker.Stop()
+		frame := 1
+		for {
+			select {
+			case <-done:
+				fmt.Fprint(p.w, "\r\x1b[2K\x1b[1A\r")
+				return
+			case <-ticker.C:
+				fmt.Fprintf(p.w, "\r  %s Loading pull requests…", p.yellow(frames[frame]))
+				frame = (frame + 1) % len(frames)
+			}
+		}
+	}()
+
+	var once sync.Once
+	return func() {
+		once.Do(func() {
+			close(done)
+			<-stopped
+		})
+	}
 }
 
 func (p Presenter) Changes(worktree repository.Worktree) {

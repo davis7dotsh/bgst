@@ -39,20 +39,42 @@ type Client struct {
 
 const pullRequestLimit = 5
 
+type pullRequestResult struct {
+	index int
+	pulls []PullRequest
+	err   error
+}
+
 func New() Client {
 	return Client{runner: process.Runner{}}
 }
 
 func (c Client) OpenPullRequests(ctx context.Context, dir, repo string) ([]PullRequest, error) {
-	drafts, err := c.pullRequests(ctx, dir, repo, "draft:true")
-	if err != nil {
-		return nil, err
+	filters := []string{"draft:true", "draft:false"}
+	results := make([]pullRequestResult, len(filters))
+	responses := make(chan pullRequestResult, len(filters))
+	queryContext, cancel := context.WithCancel(ctx)
+	defer cancel()
+	for index, filter := range filters {
+		go func(index int, filter string) {
+			pulls, err := c.pullRequests(queryContext, dir, repo, filter)
+			responses <- pullRequestResult{index: index, pulls: pulls, err: err}
+		}(index, filter)
 	}
-	ready, err := c.pullRequests(ctx, dir, repo, "draft:false")
-	if err != nil {
-		return nil, err
+
+	var firstError error
+	for range filters {
+		result := <-responses
+		results[result.index] = result
+		if result.err != nil && firstError == nil {
+			firstError = result.err
+			cancel()
+		}
 	}
-	return append(drafts, ready...), nil
+	if firstError != nil {
+		return nil, firstError
+	}
+	return append(results[0].pulls, results[1].pulls...), nil
 }
 
 func (c Client) pullRequests(ctx context.Context, dir, repo, draftFilter string) ([]PullRequest, error) {
